@@ -1,244 +1,336 @@
 #include <pthread.h>
 #include <stdint.h>
 #include "calculate.h"
+#include <stdio.h>
 
-int64_t max_int64(void *data, size_t size)
+void *pcmax(void *mess)
 {
-    int64_t max = *((int64_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((int64_t *)data+i) > max) max = (*((int64_t *)data+i));
-	return max;
-}
-
-int32_t max_int32(void *data, size_t size)
-{
-    int32_t max = *((int32_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((int32_t *)data+i) > max) max = (*((int32_t *)data+i));
-	return max;
-}
-
-int16_t max_int16(void *data, size_t size)
-{
-    int16_t max = *((int16_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((int16_t *)data+i) > max) max = (*((int16_t *)data+i));
-	return max;
-}
-
-int8_t max_int8(void *data, size_t size)
-{
-    int8_t max = *((int8_t *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((int8_t *)data+i) > max) max = (*((int8_t *)data+i));
-	return max;
-}
-
-
-uint64_t max_uint64(void *data, size_t size)
-{
-    uint64_t max = *((uint64_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((uint64_t *)data+i) > max) max = (*((uint64_t *)data+i));
-	return max;
-}
-
-uint32_t max_uint32(void *data, size_t size)
-{
-    uint32_t max = *((uint32_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((uint32_t *)data+i) > max) max = (*((uint32_t *)data+i));
-	return max;
-}
-
-uint16_t max_uint16(void *data, size_t size)
-{
-    uint16_t max = *((uint16_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((uint16_t *)data+i) > max) max = (*((uint16_t *)data+i));
-	return max;
-}
-
-uint8_t max_uint8(void *data, size_t size)
-{
-    uint8_t max = *((uint8_t *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((uint8_t *)data+i) > max) max = (*((uint8_t *)data+i));
-	return max;
-}
-
-float max_float32(void *data, size_t size)
-{
-    float max = *((float *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((float *)data+i) > max) max = (*((float *)data+i));
-	return max;
-}
-
-double max_float64(void *data, size_t size)
-{
-    double max = *((double *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((double *)data+i) > max) max = (*((double *)data+i));
-	return max;
-}
-
-
-int64_t min_int64(void *data, size_t size)
-{
-    int64_t min = *((int64_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((int64_t *)data+i) < min) min = (*((int64_t *)data+i));
-	return min;
-}
-
-int32_t min_int32(void *data, size_t size)
-{
-    int32_t min = *((int32_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((int32_t *)data+i) < min) min = (*((int32_t *)data+i));
-	return min;
-}
-
-int16_t min_int16(void *data, size_t size)
-{
-    int16_t min = *((int16_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((int16_t *)data+i) < min) min = (*((int16_t *)data+i));
-	return min;
-}
-
-int8_t min_int8(void *data, size_t size)
-{
-    int8_t min = *((int8_t *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((int8_t *)data+i) < min) min = (*((int8_t *)data+i));
-	return min;
-}
-
-
-uint64_t min_uint64(void *data, size_t size)
-{
-    uint64_t min = *((uint64_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((uint64_t *)data+i) < min) min = (*((uint64_t *)data+i));
-	return min;
-}
-
-uint32_t min_uint32(void *data, size_t size)
-{
-    uint32_t min = *((uint32_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((uint32_t *)data+i) < min) min = (*((uint32_t *)data+i));
-	return min;
-}
-
-uint16_t min_uint16(void *data, size_t size)
-{
-    uint16_t min = *((uint16_t *)data);
-	for(size_t i=0; i < size; i++)
-		if(*((uint16_t *)data+i) < min) min = (*((uint16_t *)data+i));
-	return min;
-}
-
-uint8_t min_uint8(void *data, size_t size)
-{
-    uint8_t min = *((uint8_t *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((uint8_t *)data+i) < min) min = (*((uint8_t *)data+i));
-	return min;
-}
-
-float min_float32(void *data, size_t size)
-{
-    float min = *((float *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((float *)data+i) < min) min = (*((float *)data+i));
-	return min;
-}
-
-double min_float64(void *data, size_t size)
-{
-    double min = *((double *)data);
-	for(size_t i=0; i < size; i++) 
-		if(*((double *)data+i) < min) min = (*((double *)data+i));
-	return min;
-}
-
-void pcmax(void *mess)
-{
-	struct message *m = (struct message *)mess;
+	message *m = (message *)mess;
+    size_t index = 0;
+    void *data = m->data;
+    size_t size = m->size;
 	switch(m->type) {
 		case uint8:
-			*(uint8_t *)m->value = max_uint8(m->data, m->size);
+            data = (uint8_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint8_t *)data+index) < (*((uint8_t *)data+i)))
+                    index = i;
 			break;
 		case uint16:
-			*(uint16_t *)m->value = max_uint16(m->data, m->size);
+            data = (uint16_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint16_t *)data+index) < (*((uint16_t *)data+i)))
+                    index = i;
 			break;
 		case uint32:
-			*(uint32_t *)m->value = max_uint32(m->data, m->size);
+            data = (uint32_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint32_t *)data+index) < (*((uint32_t *)data+i)))
+                    index = i;
 			break;
 		case uint64:
-			*(uint64_t *)m->value = max_uint64(m->data, m->size);
+            data = (uint64_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint64_t *)data+index) < (*((uint64_t *)data+i)))
+                    index = i;
 			break;
 		case int8:
-			*(int8_t *)m->value = max_int8(m->data, m->size);
+            data = (int8_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int8_t *)data+index) < (*((int8_t *)data+i)))
+                    index = i;
 			break;
 		case int16:
-			*(int16_t *)m->value = max_int16(m->data, m->size);
+            data = (int16_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int16_t *)data+index) < (*((int16_t *)data+i)))
+                    index = i;
 			break;
 		case int32:
-			*(int32_t *)m->value = max_int32(m->data, m->size);
+            data = (int32_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int32_t *)data+index) < (*((int32_t *)data+i)))
+                    index = i;
 			break;
 		case int64:
-			*(int64_t *)m->value = max_int64(m->data, m->size);
+            data = (int64_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int64_t *)data+index) < (*((int64_t *)data+i)))
+                    index = i;
 			break;
 		case float32:
-			*(float *)m->value = max_float32(m->data, m->size);
+            data = (float *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((float *)data+index) < (*((float *)data+i)))
+                    index = i;
 			break;
 		case float64:
-			*(double *)m->value = max_float64(m->data, m->size);
+            data = (double *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((double *)data+index) < (*((double *)data+i)))
+                    index = i;
 			break;
 		default:
 			break;
 	}
+	m->index = index + m->bindex;
+    return 0;
 }
 
-void pcmim(void *mess)
+void *pcmin(void *mess)
 {
-	struct message *m = (struct message *)mess;
+	 message *m = (message *)mess;
+    size_t index = 0;
+    void *data = m->data;
+    size_t size = m->size;
 	switch(m->type) {
 		case uint8:
-			*(uint8_t *)m->value = min_uint8(m->data, m->size);
+            data = (uint8_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint8_t *)data+index) > (*((uint8_t *)data+i)))
+                    index = i;
 			break;
 		case uint16:
-			*(uint16_t *)m->value = min_uint16(m->data, m->size);
+            data = (uint16_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint16_t *)data+index) > (*((uint16_t *)data+i)))
+                    index = i;
 			break;
 		case uint32:
-			*(uint32_t *)m->value = min_uint32(m->data, m->size);
+            data = (uint32_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint32_t *)data+index) > (*((uint32_t *)data+i)))
+                    index = i;
 			break;
 		case uint64:
-			*(uint64_t *)m->value = min_uint64(m->data, m->size);
+            data = (uint64_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((uint64_t *)data+index) > (*((uint64_t *)data+i)))
+                    index = i;
 			break;
 		case int8:
-			*(int8_t *)m->value = min_int8(m->data, m->size);
+            data = (int8_t *)data  + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int8_t *)data+index) > (*((int8_t *)data+i)))
+                    index = i;
 			break;
 		case int16:
-			*(int16_t *)m->value = min_int16(m->data, m->size);
+            data = (int16_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int16_t *)data+index) > (*((int16_t *)data+i)))
+                    index = i;
 			break;
 		case int32:
-			*(int32_t *)m->value = min_int32(m->data, m->size);
+            data = (int32_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int32_t *)data+index) > (*((int32_t *)data+i)))
+                    index = i;
 			break;
 		case int64:
-			*(int64_t *)m->value = min_int64(m->data, m->size);
+            data = (int64_t *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((int64_t *)data+index) > (*((int64_t *)data+i)))
+                    index = i;
 			break;
 		case float32:
-			*(float *)m->value = min_float32(m->data, m->size);
+            data = (float *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((float *)data+index) > (*((float *)data+i)))
+                    index = i;
 			break;
 		case float64:
-			*(double *)m->value = min_float64(m->data, m->size);
+            data = (double *)data + m->bindex;
+            for(size_t i=0; i < size; i++)
+                if(*((double *)data+index) > (*((double *)data+i)))
+                    index = i;
 			break;
 		default:
 			break;
 	}
+	m->index = index + m->bindex;
+    return 0;
 }
+
+size_t pmcmax(message *mess, int mess_num)
+{
+	message *m = (message *)mess;
+    size_t index = m->index;
+    void *data = m->data;
+	switch(m->type) {
+		case uint8:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint8_t *)data + index) < (*((uint8_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case uint16:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint16_t *)data + index) < (*((uint16_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case uint32:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint32_t *)data + index) < (*((uint32_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case uint64:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint64_t *)data + index) < (*((uint64_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int8:
+            for(int i=0; i < mess_num; i++)
+                if(*((int8_t *)data + index) < (*((int8_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int16:
+            for(int i=0; i < mess_num; i++)
+                if(*((int16_t *)data + index) < (*((int16_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int32:
+            for(int i=0; i < mess_num; i++)
+                if(*((int32_t *)data + index) < (*((int32_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int64:
+            for(int i=0; i < mess_num; i++)
+                if(*((int64_t *)data + index) < (*((int64_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case float32:
+            for(int i=0; i < mess_num; i++)
+                if(*((float *)data + index) < (*((float *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case float64:
+            for(int i=0; i < mess_num; i++)
+                if(*((double *)data + index) < (*((double *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		default:
+			break;
+	}
+    return index;
+}
+
+
+size_t pmcmin(message *mess, int mess_num)
+{
+	message *m = (message *)mess;
+    size_t index = m->index;
+    void *data = m->data;
+	switch(m->type) {
+		case uint8:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint8_t *)data + index) > (*((uint8_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case uint16:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint16_t *)data + index) > (*((uint16_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case uint32:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint32_t *)data + index) > (*((uint32_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case uint64:
+            for(int i=0; i < mess_num; i++)
+                if(*((uint64_t *)data + index) > (*((uint64_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int8:
+            for(int i=0; i < mess_num; i++)
+                if(*((int8_t *)data + index) > (*((int8_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int16:
+            for(int i=0; i < mess_num; i++)
+                if(*((int16_t *)data + index) > (*((int16_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int32:
+            for(int i=0; i < mess_num; i++)
+                if(*((int32_t *)data + index) > (*((int32_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case int64:
+            for(int i=0; i < mess_num; i++)
+                if(*((int64_t *)data + index) > (*((int64_t *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case float32:
+            for(int i=0; i < mess_num; i++)
+                if(*((float *)data + index) > (*((float *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		case float64:
+            for(int i=0; i < mess_num; i++)
+                if(*((double *)data + index) > (*((double *)data + (m+i)->index)))
+                    index = (m+i)->index;
+			break;
+		default:
+			break;
+	}
+    return index;
+}
+
+size_t amaxmin(array *arr, int max_min)
+{
+    int thread_num = 10;
+    size_t res = -1;
+    pthread_t *t = calloc(thread_num, sizeof(pthread_t));  
+    if(!t) return -1;
+    message *m = calloc(thread_num, sizeof(message));  
+    if(!m) {
+       free(t);
+       return -1;
+    }
+    size_t avg_size = arr->size / thread_num;
+    size_t bindex = 0;
+    for(int i=0; i < thread_num - 1; i++) {
+       (m + i)->data = arr->data;
+       (m + i)->size = avg_size;
+       (m + i)->bindex = bindex;
+       (m + i)->type = arr->type;
+       bindex += avg_size;
+    }
+    (m + (thread_num - 1))->data = arr->data;
+    (m + (thread_num - 1))->bindex = bindex;
+    (m + (thread_num - 1))->size = arr->size - bindex;
+    (m + (thread_num - 1))->type = arr->type;
+
+        
+    for(int i=0; i < thread_num; i++) {
+        if(max_min) {
+           pthread_create(t+i, NULL, pcmax, m+i);
+        } else {
+           pthread_create(t+i, NULL, pcmin, m+i);
+        }
+    }
+
+    for(int i=0; i < thread_num; i++) {
+        pthread_join(*(t+i), NULL);
+    }
+
+    if(max_min) {
+        res = pmcmax(m, thread_num);
+    } else {
+        res = pmcmax(m, thread_num);
+    }
+    free(t);
+    free(m);
+    return res;
+}
+
+size_t amax(array *arr) 
+{
+    return amaxmin(arr, 1);
+}
+
+size_t amin(array *arr) 
+{
+    return amaxmin(arr, 1);
+}
+

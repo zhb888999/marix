@@ -43,5 +43,7 @@ int areshape(array *arr, ashape* new_shape);
 array *arange(int64_t start, int64_t end, int64_t step,  dtype type);
 void apinf(array *arr);
 void aprint(array *arr);
+size_t amax(array *arr);
+size_t amin(array *arr);
 
 #endif

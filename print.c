@@ -187,12 +187,8 @@ int _apdwidth(array *arr)
     int len = 0;
 	int max_width = 0;
 	int min_width = 0;
-    int64_t max = *((int64_t *)arr->data);
-    int64_t min = *((int64_t *)arr->data);
-    for(size_t i=0; i < arr->size; i++) {
-        if(*((int64_t *)arr->data+i) > max) max = (*((int64_t *)arr->data+i));
-        if(*((int64_t *)arr->data+i) < min) min = (*((int64_t *)arr->data+i));
-    }
+    int64_t max = *((int64_t *)arr->data + amax(arr));
+    int64_t min = *((int64_t *)arr->data + amin(arr));
     max_width = itoa(max, buff);
     min_width = itoa(min, buff);
     width = min_width < max_width ? max_width : min_width;
