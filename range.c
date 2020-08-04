@@ -56,7 +56,7 @@ array *arange_uint64(uint64_t start, uint64_t end, uint64_t step)
     ssize_t size = dis / abs_step;
 	ashape *shape = acshape(1, size);
 	if(!shape) return 0;
-    array *arr = acreate(shape, uint32);
+    array *arr = acreate(shape, uint64);
     if(!arr) { asfree(shape); return 0; }
     uint64_t *p = (uint64_t *)arr->data;
     if(!arr->data) {afree(arr); return 0;}

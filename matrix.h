@@ -25,10 +25,11 @@ struct ashape {
 typedef struct ashape ashape;
 
 struct array {
-	void *data;
 	ashape *shape;
+	void *data;
 	size_t size;
 	dtype type;
+    int *slice;
 };
 typedef struct array array;
 
@@ -38,6 +39,8 @@ void asfree(ashape *shape);
 
 array *acreate(ashape *shape, dtype type);
 void afree(array *arr);
+
+array *aslice(array *arr, ...);
 
 array *aones(ashape *shape, dtype type);
 array *azeros(ashape *shape, dtype type);
@@ -60,5 +63,6 @@ array *arange_int32(int32_t start, int32_t end, int32_t step);
 array *arange_int64(int64_t start, int64_t end, int64_t step);
 array *arange_float32(float start, float end, float step);
 array *arange_float64(double start, double end, double step);
+array *arange(void *start, void *end, void *step, dtype type);
 
 #endif
