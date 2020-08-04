@@ -8,4 +8,7 @@ print.o: print.c print.h
 	gcc print.c -c -o print.o
 calculate.o:  calculate.c calculate.h
 	gcc calculate.c -c -lpthread -o calculate.o
+clean:
+	rm *.o
+	rm matrix
 

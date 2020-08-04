@@ -3,6 +3,8 @@
 
 #include "matrix.h"
 
+#define USE_MULTHREAD_SIZE 100000
+
 struct message {
 	void *data;
 	size_t size;

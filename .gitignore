@@ -1,2 +1,4 @@
 *.ipynb
 test.c
+*.o
+matrix

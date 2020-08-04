@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include "calculate.h"
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/sysinfo.h>
 
 void *pcmax(void *mess)
 {
@@ -276,17 +278,20 @@ size_t pmcmin(message *mess, int mess_num)
     return index;
 }
 
-size_t amaxmin(array *arr, int max_min)
+size_t amaxmin_no_thread(array *arr, int max_min) 
 {
-    int thread_num = 10;
-    size_t res = -1;
-    pthread_t *t = calloc(thread_num, sizeof(pthread_t));  
-    if(!t) return -1;
+	message m;
+	m.bindex = 0;
+	m.data = arr->data;
+	m.size = arr->size;
+	m.type = arr->type;
+	max_min ? pcmax(&m) : pcmin(&m);
+	return m.index;
+}
+
+message *_init_mess(array *arr,int thread_num) {
     message *m = calloc(thread_num, sizeof(message));  
-    if(!m) {
-       free(t);
-       return -1;
-    }
+	if(!m) return m;
     size_t avg_size = arr->size / thread_num;
     size_t bindex = 0;
     for(int i=0; i < thread_num - 1; i++) {
@@ -300,28 +305,30 @@ size_t amaxmin(array *arr, int max_min)
     (m + (thread_num - 1))->bindex = bindex;
     (m + (thread_num - 1))->size = arr->size - bindex;
     (m + (thread_num - 1))->type = arr->type;
+	return m;
+}
 
-        
-    for(int i=0; i < thread_num; i++) {
-        if(max_min) {
-           pthread_create(t+i, NULL, pcmax, m+i);
-        } else {
-           pthread_create(t+i, NULL, pcmin, m+i);
-        }
-    }
-
-    for(int i=0; i < thread_num; i++) {
+size_t amaxmin_thread(array *arr, int max_min)
+{
+    int thread_num = sysconf(_SC_NPROCESSORS_CONF);
+    size_t res = -1;
+    pthread_t *t = calloc(thread_num, sizeof(pthread_t));  
+    if(!t) return -1;
+	message *m = _init_mess(arr, thread_num);
+    if(!m) { free(t); return -1; }
+    for(int i=0; i < thread_num; i++) 
+		max_min ? pthread_create(t+i, NULL, pcmax, m+i) : pthread_create(t+i, NULL, pcmin, m+i);
+    for(int i=0; i < thread_num; i++) 
         pthread_join(*(t+i), NULL);
-    }
-
-    if(max_min) {
-        res = pmcmax(m, thread_num);
-    } else {
-        res = pmcmax(m, thread_num);
-    }
+    res = max_min ? pmcmax(m, thread_num) : pmcmin(m, thread_num);
     free(t);
     free(m);
     return res;
+}
+
+size_t amaxmin(array *arr, int max_min)
+{
+	return arr->size > USE_MULTHREAD_SIZE ? amaxmin_thread(arr, max_min) : amaxmin_no_thread(arr, max_min);
 }
 
 size_t amax(array *arr) 
