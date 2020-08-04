@@ -311,6 +311,7 @@ message *_init_mess(array *arr,int thread_num) {
 size_t amaxmin_thread(array *arr, int max_min)
 {
     int thread_num = sysconf(_SC_NPROCESSORS_CONF);
+	printf("@%d\n", thread_num);
     size_t res = -1;
     pthread_t *t = calloc(thread_num, sizeof(pthread_t));  
     if(!t) return -1;
@@ -338,6 +339,6 @@ size_t amax(array *arr)
 
 size_t amin(array *arr) 
 {
-    return amaxmin(arr, 1);
+    return amaxmin(arr, 0);
 }
 
