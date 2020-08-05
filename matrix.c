@@ -4,18 +4,27 @@
 #include <stdio.h>
 #include "matrix.h"
 
+size_t _setstep(ashape *shape,int dim)
+{
+	*(shape->step+dim-1) = dim == shape->ndim ? 1 : *(shape->value+dim) * _setstep(shape, dim+1);
+	return *(shape->step+dim-1);
+}
 
 ashape *acshape(int ndim, ...)
 {
 	int size;
 	ashape *shape = malloc(sizeof(ashape));	
 	if(!shape) return shape;
-	shape->value = calloc(ndim, sizeof(int));
-	shape->ndim = ndim;
-	if(!shape->value) {
+	if(!(shape->value = calloc(ndim, sizeof(int)))) {
 		free(shape);
 		return 0;
-	}
+	};
+	if(!(shape->step = calloc(ndim, sizeof(size_t)))) {
+		free(shape->value);
+		free(shape);
+		return 0;
+	};
+	shape->ndim = ndim;
 	va_list ap;
 	va_start(ap, ndim);
 	for(int i = 0, *p=shape->value; i < ndim; i++, p++) {
@@ -26,6 +35,7 @@ ashape *acshape(int ndim, ...)
 			return 0;
 		}
 	}
+	_setstep(shape, 1);
 	return shape;
 }
 
@@ -292,6 +302,23 @@ err:
     return -1;
 }
 
+void avalue(void *value, array *arr, ...)
+{
+	if(!arr) return;
+}
+size_t aindex(array *arr, ...)
+{
+	va_list ap;
+	va_start(ap, arr);
+	size_t index = 0;
+	int dim_index;
+	for(int i=0; i < arr->shape->ndim; i++) {
+		dim_index = va_arg(ap, int);
+		if(dim_index > *(arr->shape->value+i)) return -1;
+	}
+	/* TODO */
+
+}
 void _anaslice(int *start, int *end, int dim_size)
 {
     *start = *start >= 0 ? *start : dim_size + *start;
@@ -311,8 +338,7 @@ array *aslice(array *arr, ...)
     new_arr->type = arr->type;
     new_arr->data = arr->data;
     new_arr->size = arr->size;
-    if(!new_arr) {
-        free(new_arr->shape);
+    if(!new_arr->shape) {
         free(new_arr);
         return 0;
     }

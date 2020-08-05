@@ -128,6 +128,15 @@ void _aprint(array *arr, int dim, size_t *data_index, int is_jmp, int data_width
 	}
 }
 
+void _aprint_slice(array *arr, int dim, size_t *data_index, int is_jmp, int data_width)
+{
+	if(!arr) return;
+	int ndim = arr->shape->ndim;
+	if(dim > ndim) return;
+	int dim_size = *(arr->slice + (dim-1)*2 + 1) - *(arr->slice + (dim-1)*2);
+	/* TODO */
+
+}
 void apinf(array *arr)
 {
     fputs("<array ", stdout);
@@ -171,6 +180,7 @@ void apinf(array *arr)
 	}
     fputs(">\n", stdout);
 }
+
 
 int _apdwidth(array *arr)
 {

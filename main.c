@@ -11,4 +11,7 @@ int main() {
     afree(test1);
     afree(test2);
     afree(test3);
+	ashape *shape = acshape(5, 2, 3, 4, 5, 6);
+	for(int i=0; i < 5; i++)
+		printf("%lu ", *(shape->step+i));
 }

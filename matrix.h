@@ -20,6 +20,7 @@ typedef enum dtype dtype;
 
 struct ashape {
 	int *value;
+	size_t *step;
 	int ndim;
 };
 typedef struct ashape ashape;
