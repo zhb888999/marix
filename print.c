@@ -87,9 +87,15 @@ void _aprint(array *arr, int dim, size_t *data_index, int is_jmp, int data_width
 	int ndim = arr->shape->ndim;
     if (dim > ndim) return;
 
-    int dim_size = arr->shape->value[dim-1];
     int jmp = 1;
-    char b[25];
+
+    int dim_size;
+    if(arr->slice) {
+        dim_size = arr->slice->end[dim-1] - arr->slice->start[dim-1];
+        *data_index += arr->slice->start[dim-1] * arr->shape->step[dim-1];
+    } else {
+        dim_size = arr->shape->value[dim-1];
+    }
 
 	for(int i = 0; i < dim_size; i++) {
 		if(0 == i) {
@@ -109,7 +115,7 @@ void _aprint(array *arr, int dim, size_t *data_index, int is_jmp, int data_width
         if(is_jmp && dim_size > 6 && (i >= 3 && i < dim_size - 3)) {
             /* data size greater than 1000 and dim size greater than 6 jmp print */ 
             fputs("...", stdout);
-            for(int z=dim; z < ndim; z++) jmp *= arr->shape->value[z];
+            jmp *= arr->shape->step[dim-1];
             (*data_index) += jmp * (dim_size - 6);
             i += dim_size - 7;
         } else {
@@ -126,6 +132,8 @@ void _aprint(array *arr, int dim, size_t *data_index, int is_jmp, int data_width
         /* dim end */
 		if(i == dim_size-1) fputc(']', stdout);
 	}
+    if(arr->slice)
+        *data_index += (arr->shape->value[dim-1] - arr->slice->end[dim-1]) * arr->shape->step[dim-1];
 }
 
 void _aprint_slice(array *arr, int dim, size_t *data_index, int is_jmp, int data_width)
@@ -133,16 +141,69 @@ void _aprint_slice(array *arr, int dim, size_t *data_index, int is_jmp, int data
 	if(!arr) return;
 	int ndim = arr->shape->ndim;
 	if(dim > ndim) return;
-	int dim_size = *(arr->slice + (dim-1)*2 + 1) - *(arr->slice + (dim-1)*2);
-	/* TODO */
 
+    int dim_size = arr->slice->end[dim-1] - arr->slice->start[dim-1];
+    int jmp = 1;
+    *data_index += arr->slice->start[dim-1] * arr->shape->step[dim-1];
+	for(int i = 0; i < dim_size; i++) {
+		if(0 == i) {
+            /* first dim */
+			fputc('[', stdout);
+		} else if(i < dim_size) {
+			if(ndim==dim) {
+                /* last dim */
+                fputs(", ", stdout);
+			} else {
+                /* others dim */
+				fputc(',', stdout);
+				for(int j=0; j < ndim-dim; j++) fputc('\n', stdout);
+				for(int j=0; j < dim; j++) fputc(' ', stdout);
+			}
+		}
+        if(is_jmp && dim_size > 6 && (i >= 3 && i < dim_size - 3)) {
+            /* data size greater than 1000 and dim size greater than 6 jmp print */ 
+            fputs("...", stdout);
+            jmp *= arr->shape->step[dim-1];
+            (*data_index) += jmp * (dim_size - 6);
+            i += dim_size - 7;
+        } else {
+            /* not jmp */
+            if(dim == ndim) {
+                /* the last dim print data */
+                _apdata(arr, *data_index, data_width);
+                (*data_index)++;
+            } else {
+                /* print next dim */
+                _aprint_slice(arr, dim+1, data_index, is_jmp, data_width);
+            }
+        }
+        /* dim end */
+		if(i == dim_size-1) fputc(']', stdout);
+	}
+    *data_index += (arr->shape->value[dim-1] - arr->slice->end[dim-1]) * arr->shape->step[dim-1];
 }
+
 void apinf(array *arr)
 {
-    fputs("<array ", stdout);
-	ashape *shape = arr->shape;
-    for(int i=0; i < shape->ndim - 1; i++) fprintf(stdout, "%dx", shape->value[i]);
-    fprintf(stdout, "%d ", shape->value[shape->ndim-1]);
+    if(!arr) return;
+    if(arr->slice) {
+        fputs("<slice ", stdout);
+    } else {
+        fputs("<array ", stdout);
+    }
+    int *value = arr->shape->value;
+    int ndim = arr->shape->ndim;
+    if(arr->slice) {
+        int *start = arr->slice->start;
+        int *end = arr->slice->end;
+        for(int i=0; i <ndim - 1; i++) 
+            fprintf(stdout, "%dx", end[i] - start[i]);
+        fprintf(stdout, "%d ", end[ndim-1] - start[ndim-1]);
+    } else {
+        for(int i=0; i < ndim - 1; i++) 
+            fprintf(stdout, "%dx", value[i]);
+        fprintf(stdout, "%d ", value[ndim-1]);
+    }
 	switch (arr->type) {
 		case uint8:
 			fputs("uint8", stdout);
@@ -241,7 +302,7 @@ int _apdwidth(array *arr)
 void aprint(array *arr)
 {
     size_t data_index = 0;
-    _aprint(arr, 1, &data_index, arr->size > 1000, _apdwidth(arr));
+    _aprint(arr, 1, &data_index, arr->slice ? arr->slice->size > 1000 : arr->size > 1000, _apdwidth(arr));
     fputc('\n', stdout);
     apinf(arr);
 }

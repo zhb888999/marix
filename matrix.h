@@ -25,18 +25,29 @@ struct ashape {
 };
 typedef struct ashape ashape;
 
+struct slice_ {
+    int *start;
+    int *end;
+    size_t size;
+};
+typedef struct slice_ _slice;
+
 struct array {
 	ashape *shape;
 	void *data;
 	size_t size;
 	dtype type;
-    int *slice;
+    _slice *slice;
 };
 typedef struct array array;
+
 
 ashape *acshape(int ndim, ...);
 ashape *ashape_copy(ashape *shape);
 void asfree(ashape *shape);
+
+_slice *acslice(int ndim);
+void aslifree(_slice *slice);
 
 array *acreate(ashape *shape, dtype type);
 void afree(array *arr);
@@ -65,5 +76,8 @@ array *arange_int64(int64_t start, int64_t end, int64_t step);
 array *arange_float32(float start, float end, float step);
 array *arange_float64(double start, double end, double step);
 array *arange(void *start, void *end, void *step, dtype type);
+
+size_t aindex(array *arr, ...);
+void avalue(void *value, array *arr, ...);
 
 #endif

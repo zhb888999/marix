@@ -2,16 +2,11 @@
 #include <stdio.h>
 
 int main() {
-    array *test1 = arange_uint8(0, 10, 1);
-    array *test2 = arange_int64(0, 10, 1);
-	array *test3 = arange_float64(0, 1, 0.1);
-    aprint(test1);
+    array *test2 = arange_int64(0, 16, 1);
+    areshape(test2, acshape(2, 4, 4));
     aprint(test2);
-    aprint(test3);
-    afree(test1);
+    array *sli = aslice(test2, 0, 2, 0, 2);
+    aprint(sli);
+    //printf("%lu\n", aindex(sli, 2, 3));
     afree(test2);
-    afree(test3);
-	ashape *shape = acshape(5, 2, 3, 4, 5, 6);
-	for(int i=0; i < 5; i++)
-		printf("%lu ", *(shape->step+i));
 }

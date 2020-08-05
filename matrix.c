@@ -13,7 +13,7 @@ size_t _setstep(ashape *shape,int dim)
 ashape *acshape(int ndim, ...)
 {
 	int size;
-	ashape *shape = malloc(sizeof(ashape));	
+	ashape *shape = calloc(1, sizeof(ashape));	
 	if(!shape) return shape;
 	if(!(shape->value = calloc(ndim, sizeof(int)))) {
 		free(shape);
@@ -42,7 +42,7 @@ ashape *acshape(int ndim, ...)
 ashape *ashape_copy(ashape *shape)
 {
 	int size;
-	ashape *new_shape = malloc(sizeof(ashape));	
+	ashape *new_shape = calloc(1, sizeof(ashape));	
 	if(!new_shape) return new_shape;
 	new_shape->value = calloc(shape->ndim, sizeof(int));
 	new_shape->ndim = shape->ndim;
@@ -137,7 +137,7 @@ void *acdata(size_t size, dtype type)
 array *acreate(ashape *shape, dtype type)
 {
 	if(!shape) return 0;
-	array *arr = (array *)malloc(sizeof(array));
+	array *arr = calloc(1, sizeof(array));
     if(!arr) return arr;
     arr->size = 1;
     arr->shape = ashape_copy(shape);
@@ -148,6 +148,8 @@ array *acreate(ashape *shape, dtype type)
     arr->type = type;
 	for(int i=0; i<arr->shape->ndim; i++) 
         arr->size *= shape->value[i];
+    if(0 == arr->shape->ndim) 
+        arr->size=0;
 	arr->data = acdata(arr->size, type);
 	if(!arr->data) {
 		asfree(arr->shape);
@@ -270,6 +272,7 @@ void afree(array *arr)
 	if(!arr) return;
     if(arr->data) free(arr->data);
 	if(arr->shape) asfree(arr->shape);
+    if(arr->slice) aslifree(arr->slice);
 	if(arr) free(arr);
 }
 
@@ -302,23 +305,105 @@ err:
     return -1;
 }
 
-void avalue(void *value, array *arr, ...)
-{
-	if(!arr) return;
-}
 size_t aindex(array *arr, ...)
 {
 	va_list ap;
 	va_start(ap, arr);
 	size_t index = 0;
 	int dim_index;
-	for(int i=0; i < arr->shape->ndim; i++) {
-		dim_index = va_arg(ap, int);
-		if(dim_index > *(arr->shape->value+i)) return -1;
-	}
-	/* TODO */
-
+    int *value = arr->shape->value;
+    size_t *step = arr->shape->step;
+    int ndim = arr->shape->ndim;
+    if(!arr->slice) {
+        for(int i=0; i < ndim; i++) {
+            dim_index = va_arg(ap, int);
+            if(dim_index > *(value++)) 
+                return -1;
+            index += dim_index*(*(step++));
+        }
+        return index;
+    }
+    int *start = arr->slice->start;
+    int *end = arr->slice->end;
+    for(int i=0; i < ndim; i++) {
+        dim_index = va_arg(ap, int) + *(start++);
+        if(dim_index > *(end++)) 
+            return -1;
+        index += dim_index*(*(step++));
+    }
+    return index;
 }
+
+void avalue(void *value, array *arr, ...)
+{
+	if(!arr) return;
+    va_list ap;
+    va_start(ap , arr);
+    size_t index;
+    if((index = aindex(arr, ap) == -1))
+        return;
+    va_end(ap);
+    switch(arr->type) {
+        case uint8:
+            *(uint8_t *)value = *((uint8_t *)arr->data + index);
+            return;
+        case uint16:
+            *(uint16_t *)value = *((uint16_t *)arr->data + index);
+            return;
+        case uint32:
+            *(uint32_t *)value = *((uint32_t *)arr->data + index);
+            return;
+        case uint64:
+            *(uint64_t *)value = *((uint64_t *)arr->data + index);
+            return;
+        case int8:
+            *(int8_t *)value = *((int8_t *)arr->data + index);
+            return;
+        case int16:
+            *(int16_t *)value = *((int16_t *)arr->data + index);
+            return;
+        case int32:
+            *(int32_t *)value = *((int32_t *)arr->data + index);
+            return;
+        case int64:
+            *(int64_t *)value = *((int64_t *)arr->data + index);
+            return;
+        case float32:
+            *(float *)value = *((float *)arr->data + index);
+            return;
+        case float64:
+            *(double *)value = *((double *)arr->data + index);
+            return;
+        default:
+            return;
+    }
+}
+
+_slice *acslice(int ndim)
+{
+    _slice *slice = calloc(1, sizeof(slice));
+    if(!slice) return 0;
+    slice->start = calloc(ndim, sizeof(int));
+    if(!slice->start) {
+        free(slice);
+        return 0;
+    }
+    slice->end = calloc(ndim, sizeof(int));
+    if(!slice->end) {
+        free(slice->start);
+        free(slice);
+    }
+    return slice;
+}
+
+void aslifree(_slice * slice)
+{
+    if(!slice) return;
+    if(slice->start) free(slice->start);
+    if(slice->end) free(slice->end);
+    free(slice);
+}
+
 void _anaslice(int *start, int *end, int dim_size)
 {
     *start = *start >= 0 ? *start : dim_size + *start;
@@ -328,31 +413,39 @@ void _anaslice(int *start, int *end, int dim_size)
     *end = *end > dim_size ? dim_size : *end;
 }
 
+
 array *aslice(array *arr, ...)
 {
     if(!arr) return 0;
-    array *new_arr = malloc(sizeof(array));
-    if(!new_arr) return 0;
-    int *slice = calloc(arr->shape->ndim*2, sizeof(int));
-    new_arr->shape = ashape_copy(arr->shape);
-    new_arr->type = arr->type;
-    new_arr->data = arr->data;
-    new_arr->size = arr->size;
-    if(!new_arr->shape) {
+    array *new_arr;
+    if(!(new_arr = calloc(1, sizeof(array))))
+        return 0;
+    if(!(new_arr->slice = acslice(arr->shape->ndim))) {
         free(new_arr);
         return 0;
     }
-    if(!slice) {
-        free(new_arr->shape);
-        afree(new_arr);
+    if(!(new_arr->shape = ashape_copy(arr->shape))) {
+        aslifree(new_arr->slice);
+        free(new_arr);
         return 0;
     }
+    new_arr->type = arr->type;
+    new_arr->data = arr->data;
+    new_arr->size = arr->size;
     va_list ap;
     va_start(ap, arr);
+    int *start, *end, *value;
+    start = new_arr->slice->start;
+    end = new_arr->slice->end;
+    value = new_arr->shape->value;
+    new_arr->slice->size = 1;
     for(int i=0; i < arr->shape->ndim; i++) {
-        *(slice + i*2) = va_arg(ap, int);
-        *(slice + i*2 + 1) = va_arg(ap, int);
-        _anaslice(slice + i*2, slice + i*2 +1, *arr->shape->value + i);
+        *(start++) = va_arg(ap, int);
+        *(end++) = va_arg(ap, int);
+        _anaslice(start, end, *(value++));
+        new_arr->slice->size *= end-start;
     }
+    if(0 == arr->shape->ndim)
+        new_arr->slice->size = 0;
     return new_arr;
 }
