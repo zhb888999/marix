@@ -88,7 +88,7 @@ void _aprint(array *arr, int dim, size_t *data_index, int is_jmp, int data_width
     if (dim > ndim) return;
 
     int jmp = 1;
-
+    char buf[30];
     int dim_size;
     if(arr->slice) {
         dim_size = arr->slice->end[dim-1] - arr->slice->start[dim-1];
@@ -134,53 +134,6 @@ void _aprint(array *arr, int dim, size_t *data_index, int is_jmp, int data_width
 	}
     if(arr->slice)
         *data_index += (arr->shape->value[dim-1] - arr->slice->end[dim-1]) * arr->shape->step[dim-1];
-}
-
-void _aprint_slice(array *arr, int dim, size_t *data_index, int is_jmp, int data_width)
-{
-	if(!arr) return;
-	int ndim = arr->shape->ndim;
-	if(dim > ndim) return;
-
-    int dim_size = arr->slice->end[dim-1] - arr->slice->start[dim-1];
-    int jmp = 1;
-    *data_index += arr->slice->start[dim-1] * arr->shape->step[dim-1];
-	for(int i = 0; i < dim_size; i++) {
-		if(0 == i) {
-            /* first dim */
-			fputc('[', stdout);
-		} else if(i < dim_size) {
-			if(ndim==dim) {
-                /* last dim */
-                fputs(", ", stdout);
-			} else {
-                /* others dim */
-				fputc(',', stdout);
-				for(int j=0; j < ndim-dim; j++) fputc('\n', stdout);
-				for(int j=0; j < dim; j++) fputc(' ', stdout);
-			}
-		}
-        if(is_jmp && dim_size > 6 && (i >= 3 && i < dim_size - 3)) {
-            /* data size greater than 1000 and dim size greater than 6 jmp print */ 
-            fputs("...", stdout);
-            jmp *= arr->shape->step[dim-1];
-            (*data_index) += jmp * (dim_size - 6);
-            i += dim_size - 7;
-        } else {
-            /* not jmp */
-            if(dim == ndim) {
-                /* the last dim print data */
-                _apdata(arr, *data_index, data_width);
-                (*data_index)++;
-            } else {
-                /* print next dim */
-                _aprint_slice(arr, dim+1, data_index, is_jmp, data_width);
-            }
-        }
-        /* dim end */
-		if(i == dim_size-1) fputc(']', stdout);
-	}
-    *data_index += (arr->shape->value[dim-1] - arr->slice->end[dim-1]) * arr->shape->step[dim-1];
 }
 
 void apinf(array *arr)

@@ -6,8 +6,8 @@
 
 size_t _setstep(ashape *shape,int dim)
 {
-	*(shape->step+dim-1) = dim == shape->ndim ? 1 : *(shape->value+dim) * _setstep(shape, dim+1);
-	return *(shape->step+dim-1);
+	shape->step[dim-1] = dim == shape->ndim ? 1 : shape->value[dim] * _setstep(shape, dim+1);
+	return shape->step[dim-1];
 }
 
 ashape *acshape(int ndim, ...)
@@ -42,16 +42,23 @@ ashape *acshape(int ndim, ...)
 ashape *ashape_copy(ashape *shape)
 {
 	int size;
-	ashape *new_shape = calloc(1, sizeof(ashape));	
-	if(!new_shape) return new_shape;
-	new_shape->value = calloc(shape->ndim, sizeof(int));
+	ashape *new_shape;
+    if(!(new_shape = calloc(1, sizeof(ashape))))
+        return 0;	
+	if(!(new_shape->value = calloc(shape->ndim, sizeof(int)))) {
+        free(new_shape);
+        return 0;
+    };
+	if(!(new_shape->step = calloc(shape->ndim, sizeof(size_t)))) {
+        free(new_shape->value);
+        free(new_shape);
+        return 0;
+    };
 	new_shape->ndim = shape->ndim;
-	if(!shape->value) {
-		free(new_shape);
-		return 0;
-	}
-	for(int i = shape->ndim; i < shape->ndim; i++)
+	for(int i = shape->ndim; i < shape->ndim; i++) {
 		new_shape->value[i] = shape->value[i];
+        new_shape->step[i] = shape->step[i];
+    }
 	return shape;
 }
 
@@ -137,19 +144,21 @@ void *acdata(size_t size, dtype type)
 array *acreate(ashape *shape, dtype type)
 {
 	if(!shape) return 0;
-	array *arr = calloc(1, sizeof(array));
-    if(!arr) return arr;
+	array *arr;
+    if(!(arr = calloc(1, sizeof(array))))
+        return 0;
+    if(!(arr->shape = ashape_copy(shape))) {
+        free(arr);
+        return 0;
+    };
     arr->size = 1;
-    arr->shape = ashape_copy(shape);
-	if(!arr->shape) {
-		free(arr);
-		return 0;
-	}
     arr->type = type;
-	for(int i=0; i<arr->shape->ndim; i++) 
+	for(int i=0; i < arr->shape->ndim; i++) 
         arr->size *= shape->value[i];
-    if(0 == arr->shape->ndim) 
+    if(0 == arr->shape->ndim) {
         arr->size=0;
+        return arr;
+    }
 	arr->data = acdata(arr->size, type);
 	if(!arr->data) {
 		asfree(arr->shape);
@@ -161,8 +170,9 @@ array *acreate(ashape *shape, dtype type)
 
 array *arepeat(ashape *shape, dtype type, void* value)
 {
-    array *arr = acreate(shape, type);
-    if(!arr) return arr;
+    array *arr;
+    if(!(arr = acreate(shape, type)))
+        return 0;
     _aidata(arr, value);
     return arr;
 }
@@ -281,8 +291,9 @@ int areshape(array *arr, ashape* new_shape)
     va_list ap;
     size_t new_size = 1;
     int dim = -1;
-    ashape *shape = ashape_copy(new_shape);
-    if(!new_shape) return -1;
+    ashape *shape;
+    if(!(shape = ashape_copy(new_shape))) 
+        return -1;
     for(int i = 0, *p = shape->value; i < shape->ndim; i++, p++) {
         if(*p == 0 || *p < -1) goto err;
         if(-1 == *p) {
@@ -298,6 +309,7 @@ int areshape(array *arr, ashape* new_shape)
     }
     if(new_size != arr->size) goto err;
     free(arr->shape);
+    _setstep(shape, 1);
     arr->shape = shape;
     return 0;
 err:
@@ -314,6 +326,7 @@ size_t aindex(array *arr, ...)
     int *value = arr->shape->value;
     size_t *step = arr->shape->step;
     int ndim = arr->shape->ndim;
+    /* slice */
     if(!arr->slice) {
         for(int i=0; i < ndim; i++) {
             dim_index = va_arg(ap, int);
@@ -323,6 +336,7 @@ size_t aindex(array *arr, ...)
         }
         return index;
     }
+    /* array */
     int *start = arr->slice->start;
     int *end = arr->slice->end;
     for(int i=0; i < ndim; i++) {

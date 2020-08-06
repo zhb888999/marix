@@ -215,7 +215,6 @@ size_t pmcmax(message *mess, int mess_num)
     return index;
 }
 
-
 size_t pmcmin(message *mess, int mess_num)
 {
 	message *m = (message *)mess;
@@ -311,7 +310,6 @@ message *_init_mess(array *arr,int thread_num) {
 size_t amaxmin_thread(array *arr, int max_min)
 {
     int thread_num = sysconf(_SC_NPROCESSORS_CONF);
-	printf("@%d\n", thread_num);
     size_t res = -1;
     pthread_t *t = calloc(thread_num, sizeof(pthread_t));  
     if(!t) return -1;
